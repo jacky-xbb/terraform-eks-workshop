@@ -26,12 +26,14 @@
 
 # Table of Contents
 
-1. Intro to Terraform & DemoIntro to Terraform & Demo
+1. Intro to Terraform
 2. Terraform Basics
 3. Terraform In Action
 4. Organizing Your Terraform Code
-5. Provision and Configure AWS Instance
-6. Manage and Change Infrastructure State
+5. Terraform State
+6. Deploy EKS
+7. Deploy Operator
+8. Demo
 
 ---
 
@@ -310,7 +312,9 @@ resource type "name" {
 ```
 
 resource = Top level keyword
+
 type = Type of resource. Example: aws_instance.
+
 name = Arbitrary name to refer to this resource. Used internally by terraform. This field cannot be a variable.
 
 ---
@@ -425,7 +429,7 @@ Data sources are a way of querying a provider to return an existing resource so 
 
 Terraform can automatically keep track of dependencies for you. Look at the two resources below. Note the highlighted lines in the aws_instance resource. This is how we tell one resource to refer to another in terraform.
 
-![]([https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/B7J2Qh.png?token=AL6CIGZNNDNPVMGSUAZYDG3EELBX2](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/B7J2Qh.png?token=AL6CIGZNNDNPVMGSUAZYDG3EELBX2))
+![:scale 100%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/B7J2Qh.png)
 
 ---
 
@@ -509,7 +513,7 @@ output "private_key" {
 
 # **Chapter 4**
 
-## **Provision and Configure AWS Instances**
+## **Organizing Your Terraform Code**
 
 ---
 
@@ -547,7 +551,7 @@ provisioner "file" {
 The remote exec provisioner allows you to execute scripts or other programs on the target host. If it's something you can run unattended (for example, a software installer), then you can run it with remote exec.provisioner
 
 ```json
-"remote-exec" {
+provisioner "remote-exec" {
   inline = [
     "sudo chown -R ${var.admin_username}:${var.admin_username} /var/www/html",
     "chmod +x *.sh",
@@ -761,6 +765,13 @@ resource "helm_release" "emqx_operator" {
   <script src=
   "https://remarkjs.com/downloads/remark-latest.min.js"></script>
   <script>
+
+
+
+
+
+
+
 
 
 
