@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+</head>
+<body>
+    <textarea id="source">class: center, middle
+
+
+# Using terraform deploy k8s and operator
+
+---
+
+# Table of Contents
+
+1. Intro to Terraform & DemoIntro to Terraform & Demo
+2. Terraform Basics
+3. Terraform In Action
+4. Organizing Your Terraform Code
+5. Provision and Configure AWS Instance
+6. Manage and Change Infrastructure State
+
+---
+
+# Chapter 1
+
+## Introduction to Terraform
+
+---
+
+# How to Provision an AWS Instance
+
+Let’s look at a few different ways you could provide a new ASW Instance:
+
+- Instance Name
+- Image
+- VM Size
+- Region
+- Security Group
+
+---
+
+# Method1: AWS Console
+
+
+
+![:scale 100%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/VkCn5J.png)
+
+
+---
+
+# Method 1: AWS Portal
+
+![:scale 90%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/7uMyBM.png)
+
+---
+
+# Method 2: CloudFormation Templates
+
+CloudFormation Templates provide a consistent and reliable way to provision AWS resources. JSON is easy for computers to read but can be challenging for humans to edit and troubleshoot.
+
+```json
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWS CloudFormation Sample Template EC2InstanceWithSecurityGroupSample: Create an Amazon EC2 instance running the Amazon Linux AMI. The AMI is chosen based on the region in which the stack is run. This example creates an EC2 security group for the instance to give you SSH access. **WARNING** This template creates an Amazon EC2 instance. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Parameters" : {
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+  }
+}
+```
+
+---
+
+# Method 3: Provision with Terraform
+
+**Example Terraform code for building an AWS instance.**
+
+```json
+resource aws_instance "web" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+```
+
+---
+
+# ****What is Terraform?****
+
+```json
+resource aws_instance "catapp" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
+  tags = {
+    Name = "${var.prefix}-meow"
+  }
+```
+
+- Executable Documentation
+- Human and machine-readable
+- Easy to learn
+- Test, share, re-use, automate
+- Works on all major cloud providers
+
+---
+
+# ****What is Infrastructure as Code?****
+
+**Infrastructure as Code (IaC) is the process of managing and provisioning cloud infrastructure with machine-readable definition files.**
+
+---
+
+# **Infrastructure as Code Allows Us To...**
+
+- Provide a codified workflow to create infrastructure
+- Change and update existing infrastructure
+- Safely test changes using terraform plan in dry run mode
+- Integrate with application code workflows (Git, CI/CD tools)
+- Provide reusable modules for easy sharing and collaboration
+- Enforce security policy and organizational standards
+- Enable collaboration between different teams
+
+---
+
+# **Other Infrastructure as Code Tools**
+
+![:scale 60%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/v24HM2.png)
+
+These tools work well for configuring the operating system and application. They are not purpose-built for provisioning cloud infrastructure and platform services.
+
+---
+
+# **Native Cloud Provisioning Tools**
+
+![:scale 70%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/YXJSTa.png?token=AL6CIG3XZGI2ONSP5CSN5FLEEK4ZW](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/YXJSTa.png?token=AL6CIG3XZGI2ONSP5CSN5FLEEK4ZW)
+
+Each cloud has its own YAML or JSON based provisioning tool.
+
+Terraform can be used across all major cloud providers and VM hypervisors
+
+---
+
+# ****Why Terraform?****
+
+- Supports multi-cloud & hybrid infrastructure
+- Migrate from other cloud providers
+- Increase provisioning speed
+- Improve efficiency
+- Reduce risk
+
+---
+
+# Chapter 2
+
+## **Terraform Basics**
+
+---
+
+# ****What is Terraform?****
+
+![:scale 40%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/OfxYfb.png)
+
+- Terraform is an open source provisioning tool.
+- It ships as a single binary which is written in Go. Terraform is cross platform and can run on Linux, Windows, or MacOS.
+- Installing terraform is easy. You simply download a zip file, unzip it, and run it.
+
+---
+
+# ****Terraform Command Line****
+
+Terraform has subcommands that perform different actions.Terraform has subcommands that perform different actions.
+
+```bash
+# Basic Terraform Commands
+terraform version
+terraform help
+terraform init
+terraform plan
+terraform apply
+terraform destroy
+```
+
+---
+
+# ****Terraform Code****
+
+```json
+resource aws_vpc "main" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "dedicated"
+}
+```
+
+Terraform code is based on the [HCL2 toolkit](https://github.com/hashicorp/hcl). HCL stands for HashiCorp Configuration Language.
+
+Terraform code, or simply terraform is a declarative language that is specifically designed for provisioning infrastructure on any cloud or platform.
+
+---
+
+# ****Terraform Workspaces****
+
+A terraform workspace is simply a folder or directory that contains terraform code.
+
+Terraform files always end in either a *.tf or *.tfvars extension.
+
+Most terraform workspaces contain a minimum of three files:
+
+[main.tf](http://main.tf/) - Most of your functional code will go here.
+[variables.tf](http://variables.tf/) - This file is for storing variables.
+[outputs.tf](http://outputs.tf/) - Define what is shown at the end of a terraform run.
+
+---
+
+# ****Terraform Init****
+
+```json
+$ terraform init
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "aws" (hashicorp/aws) 2.35.0...
+...
+ provider.aws: version = "~&gt; 2.35"
+Terraform has been successfully initialized!
+```
+
+Terraform fetches any required providers and modules and stores them in the .terraform directory. If you add, change or update your modules or providers you will need to run init again.
+
+---
+
+# ****Terraform Plan****
+
+```json
+$ terraform plan
+An execution plan has been generated and is shown below.
+Terraform will perform the following actions:
+  # aws_vpc.main will be created
+  + resource "aws_vpc" "main" {
+      + arn                              = (known after apply)
+      + cidr_block                       = "10.0.0.0/16"
+      ...
+      + instance_tenancy                 = "dedicated"
+    }
+```
+
+Preview your changes with `terraform plan` before you apply them.
+
+---
+
+# ****Where are Variables Defined?****
+
+Terraform variables are placed in a file called [variables.tf](http://variables.tf/). Variables can have default settings. If you omit the default, the user will be prompted to enter a value. Here we are declaring the variables that we intend to use.Terraform variables are placed in a file called [variables.tf](http://variables.tf/). Variables can have default settings. If you omit the default, the user will be prompted to enter a value. Here we are declaring the variables that we intend to use.
+
+```json
+variable "prefix" {
+  description = "This prefix will be included in the name of most resources."
+}
+variable "instance_tenancy" {
+  description = "A tenancy option for instances launched into the VPC."
+  default     = "dedicated"
+}
+```
+
+---
+
+# ****Chapter 2 Review****
+
+## In this chapter we:
+
+- Used the terraform init command
+- Ran the terraform plan command
+- Learned about variables
+
+---
+
+# **Chapter 3**
+
+## **Terraform in Action**
+
+---
+
+# ****Anatomy of a Resource****
+
+Every terraform resource is structured exactly the same way.
+
+```json
+resource type "name" {
+  parameter = "foo"
+  parameter2 = "bar"
+  list = ["one", "two", "three"]
+}
+```
+
+resource = Top level keyword
+type = Type of resource. Example: aws_instance.
+name = Arbitrary name to refer to this resource. Used internally by terraform. This field cannot be a variable.
+
+---
+
+# ****Terraform Provider Configuration****
+
+The terraform core program requires at least one provider to build anything.
+
+You can manually configure which version(s) of a provider you would like to use. If you leave this option out, Terraform will default to the latest available version of the provider.
+
+```json
+provider "aws" {
+  version = "=2.35.0"
+}
+```
+
+---
+
+# ****Versioning Operators****
+
+```json
+- = (or no operator): exact version equality
+- !=: version not equal
+- \&gt;, &gt;=, &lt;, &lt;=: version comparison
+- ~&gt;: pessimistic constraint, constraining both the oldest and newest
+version allowed. ~&gt; 0.9 is equivalent to &gt;= 0.9, &lt; 1.0, and ~&gt; 0.8.4
+is equivalent to &gt;= 0.8.4, &lt; 0.9
+```
+
+Re-usable modules should constrain only the minimum allowed version, such as &gt;= 2.35.0.
+
+---
+
+# ****Terraform Apply****
+
+```json
+$ terraform apply
+An execution plan has been generated and is shown below.
+Terraform will perform the following actions:
+  # aws_vpc.main will be created
+  + resource "aws_vpc" "main" {
+      + cidr_block                       = "10.0.0.0/16"
+      + instance_tenancy                 = "dedicated"
+        ...
+      + tags                             = {
+          + "Name" = "main"
+        }
+    }
+Plan: 1 to add, 0 to change, 0 to destroy.
+```
+
+`terraform apply` runs a plan and then if you approve, it applies the changes.
+
+---
+
+# ****Terraform Destroy****
+
+```json
+$ terraform destroy
+An execution plan has been generated and is shown below.
+Terraform will perform the following actions:
+  # aws_vpc.main will be destroyed
+  - resource "aws_vpc" "main" {
+      - cidr_block                       = "10.0.0.0/16" -&gt; null
+      - instance_tenancy                 = "dedicated" -&gt; null
+        ...
+      - tags                             = {
+          - "Name" = "main"
+        } -&gt; null
+    }
+Plan: 0 to add, 0 to change, 1 to destroy.
+```
+
+`terraform destroy` does the opposite. If you approve, your infrastructure is destroyed.
+
+---
+
+# ****Terraform Format****
+
+Terraform comes with a built-in code formatter/cleaner. It can make all your margins and list indentations neat and tidy. Beauty work.
+
+```json
+terraform fmt
+```
+
+Simply run it in a directory containing *.tf files and it will tidy up your code for you.
+
+---
+
+# ****Terraform Data Sources****
+
+```json
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+```
+
+Data sources are a way of querying a provider to return an existing resource so that we can access its parameters for our own use.
+
+---
+
+# ****Terraform Dependency Mapping****
+
+Terraform can automatically keep track of dependencies for you. Look at the two resources below. Note the highlighted lines in the aws_instance resource. This is how we tell one resource to refer to another in terraform.
+
+![]([https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/B7J2Qh.png?token=AL6CIGZNNDNPVMGSUAZYDG3EELBX2](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/B7J2Qh.png?token=AL6CIGZNNDNPVMGSUAZYDG3EELBX2))
+
+---
+
+# ****Organize Your Terraform Code****
+
+Terraform will read any file in your workspace that ends in a `.tf`
+ extension, but the convention is to have a main.tf, variables.tf, and outputs.tf. You may add more tf files if you wish.
+
+```json
+main.tf
+variables.tf
+outputs.tf
+```
+
+Let's take a closer look at each of these files.
+
+---
+
+# ****The Main File****
+
+The first file is called main.tf. This is where you normally store your terraform code. With larger, more complex infrastructure you might break this up across several files.
+
+```json
+# This is the main.tf file.
+resource aws_vpc "main" {
+  cidr_block       = var.cidr_block
+  instance_tenancy = var.instance_tenancy
+}
+resource aws_subnet "main" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.cidr_block
+  }
+}
+...
+```
+
+---
+
+# ****The Variables File****
+
+The second file is called [variables.tf](http://variables.tf/). This is where you define your variables and optionally set some defaults.
+
+```json
+variable "cidr_block" {
+  description = "The address space that is used within the VPC. Changing this forces a new resource to be created."
+}
+variable "instance_tenancy" {
+  description = "A tenancy option for instances launched into the VPC. Acceptable values are 'dedicated' and ''"
+  default     = "dedicated"
+}
+```
+
+---
+
+# ****The Outputs File****
+
+The outputs file is where you configure any messages or data you want to show at the end of a terraform apply.
+
+```json
+output "catapp_url" {
+  value = "http://${aws_route53_record.hashicat.fqdn}"
+}
+output "private_key" {
+  value = "${tls_private_key.hashicat.private_key_pem}"
+}
+```
+
+---
+
+# ****Chapter 3 Review****
+
+## In this chapter we:
+
+- Learned about Terraform resources
+- Ran terraform plan, graph, appy and destroy
+- Learned about dependencies
+- Viewed a graph of the lab
+- Looked at [main.tf](http://main.tf/), [variables.tf](http://variables.tf/) and [outputs.tf](http://outputs.tf/)
+
+---
+
+# **Chapter 4**
+
+## **Provision and Configure AWS Instances**
+
+---
+
+# ****Using Terraform Provisioners****
+
+Once you've used Terraform to stand up a virtual machine or container, you may wish to configure your operating system and applications. This is where provisioners come in. Terraform supports several different types of provisioners including Bash, Powershell, Chef, Puppet, Ansible, and more.
+
+[https://www.terraform.io/docs/provisioners/index.html](https://www.terraform.io/docs/provisioners/index.html)
+
+---
+
+# ****The File Provisioner****
+
+**The Terraform file provisioner copies files onto the remote machine.**
+
+```json
+provisioner "file" {
+  source        = "files/"
+  destination   = "/home/${var.admin_username}/"
+  connection {
+    type        = "ssh"
+    user        = var.username
+    private_key = file(var.ssh_key)
+    host        = ${self.ip}
+  }
+}
+```
+
+**Note** the connection block of code inside the provisioner block. The file provisioner supports both SSH and WinRM connections. Note the connection block of code inside the provisioner block. The file provisioner supports both SSH and WinRM connections.
+
+---
+
+# ****The Remote Exec Provisioner****
+
+The remote exec provisioner allows you to execute scripts or other programs on the target host. If it's something you can run unattended (for example, a software installer), then you can run it with remote exec.provisioner
+
+```json
+"remote-exec" {
+  inline = [
+    "sudo chown -R ${var.admin_username}:${var.admin_username} /var/www/html",
+    "chmod +x *.sh",
+    "PLACEHOLDER=${var.placeholder} WIDTH=${var.width} HEIGHT=${var.height} PREFIX=${var.prefix} ./deploy_app.sh",
+  ]
+...
+}
+```
+
+In this example, we're running a few commands to change some permissions and ownership, and to run a script with some environment variables.
+
+---
+
+# **Terraform & Config Management Tools**
+
+![:scale 80%](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/vEmMMF.png?token=AL6CIGYES4X3TI66A2JDT2LEELYJK](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/vEmMMF.png?token=AL6CIGYES4X3TI66A2JDT2LEELYJK)
+
+Terraform works well with common config management tools like Chef, Puppet or Ansible.
+
+Run Puppet with 'local-exec':
+[https://www.terraform.io/docs/provisioners/local-exec.html](https://www.terraform.io/docs/provisioners/local-exec.html)
+
+Terraform and Ansible - Better Together:
+[https://github.com/scarolan/ansible-terraform](https://github.com/scarolan/ansible-terraform)
+
+---
+
+# ****Chapter 4 Review****
+
+### In this chapter we:
+
+- Learned about Terraform Provisioners
+- Explored the file and remote-exec provisioners
+- Rebuilt our web server with a new provisioning step
+
+---
+
+# **Chapter 5**
+
+## **Terraform State**
+
+---
+
+# ****Terraform State****
+
+Terraform is a stateful application. This means that it keeps track of everything you build inside of a state file. You may have noticed the terraform.tfstate and terraform.tfstate.backup files that appeared inside your working directory. The state file is Terraform's source of record for everything it knows about.
+
+```json
+{
+  "terraform_version": "0.12.7",
+  "serial": 14,
+  "lineage": "452b4191-89f6-db17-a3b1-4470dcb00607",
+  "outputs": {
+    "catapp_url": {
+      "value": "http://go-hashicat-5c0265179ccda553.workshop.aws.hashidemos.io",
+      "type": "string"
+    },
+  }
+}
+```
+
+---
+
+# ****Terraform Refresh****
+
+Sometimes infrastructure may be changed outside of Terraform's control.
+
+The state file represents the last known state of the infrastructure. If you'd like to check and see if the state file still matches what you built, you can use the terraform refresh command.
+
+Note that this does not update your infrastructure, it simply updates the state file.
+
+```json
+terraform refresh
+```
+
+---
+
+# ****Changing Existing Infrastructure****
+
+Whenever you run a plan or apply, Terraform reconciles three different data sources:
+
+1. What you wrote in your code
+2. The state file
+3. What actually exists
+
+Terraform does its best to add, delete, change, or replace existing resources based on what is in your *.tf files. Here are the four different things that can happen to each resource during a plan/apply:
+
+```json
++   create
+-   destroy
+-/+ replace
+~   update in-place
+```
+
+---
+
+# **Chapter 6**
+
+### Deploy  EKS
+
+---
+
+# AWS VPC
+
+It contains configuration to provision a VPC, security groups, and an EKS cluster with the following architecture:
+
+![]([https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/ud55eT.png?token=AL6CIG43I56KGHQPXM5IDODEEL3ZC](https://raw.githubusercontent.com/jacky-xbb/pics/main/uPic/ud55eT.png?token=AL6CIG43I56KGHQPXM5IDODEEL3ZC))
+
+```json
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~&gt; 3.0"
+
+  name = "${var.cluster_name}-vpc"
+  cidr = local.vpc_cidr
+
+  azs             = local.azs
+  public_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k)]
+  private_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 10)]
+
+        ...
+}
+```
+
+---
+
+# EKS **Blueprints**
+
+Amazon EKS (Elastic Kubernetes Service) blueprints are pre-configured and tested infrastructure-as-code templates designed to deploy production-ready Kubernetes environments on AWS.
+
+```json
+module "eks_blueprints" {
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.25.0"
+
+  cluster_name    = "${var.cluster_name}-eks"
+  cluster_version = var.cluster_version
+  # enable_irsa     = true
+
+  vpc_id = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnets
+
+  managed_node_groups = {
+    capacity_type   = "ON_DEMAND"
+    node_group_name = "general"
+    instance_types  = ["t3a.xlarge"]
+    desired_size    = "3"
+    max_size        = "5"
+    min_size        = "3"
+  }
+
+```
+
+---
+
+# Chapter 7
+
+## Deploy EMQX Operator
+
+---
+
+# Add-on
+
+Operational software that provides key functionality to support your Kubernetes applications.
+
+```json
+module "kubernetes_addons" {
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.25.0"
+
+  eks_cluster_id = data.aws_eks_cluster.cluster.id
+
+  # EKS Add-ons
+  enable_metrics_server = true
+  enable_amazon_eks_aws_ebs_csi_driver = true
+  enable_aws_load_balancer_controller = true
+  enable_cert_manager   = true
+  enable_kube_prometheus_stack = true
+}
+```
+
+---
+
+# Helm support
+
+```json
+provider "helm" {
+        ...
+}
+
+resource "helm_release" "emqx_operator" {
+  depends_on = [module.kubernetes_addons]
+
+  name       = "emqx-operator"
+  namespace = "emqx-operator-system"
+  create_namespace = true
+
+  repository = "https://repos.emqx.io/charts"
+  chart      = "emqx-operator"
+}
+```
+
+---
+
+# Thanks
+
+### Repo:</textarea>
+    <script src=
+    "https://remarkjs.com/downloads/remark-latest.min.js"></script>
+
+    <script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     remark.macros.scale = function (percentage) {
+    var url = this;
+    return '<img src="' + url + '" style="width: ' + percentage + '" />';
+     };
+
+     var slideshow = remark.create();
+    </script>
+</body>
+</html>
